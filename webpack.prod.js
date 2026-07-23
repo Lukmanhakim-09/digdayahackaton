@@ -22,9 +22,45 @@ module.exports = merge(common, {
     }),
     new WorkboxWebpackPlugin.GenerateSW({
       swDest: 'sw.js',
+      clientsClaim: true,
+      skipWaiting: true,
       maximumFileSizeToCacheInBytes: 25 * 1024 * 1024,
       runtimeCaching: [
-        // Cache HuggingFace model files (transformers.js) — CacheFirst karena tidak berubah
+        // Cache Google Fonts stylesheets
+        {
+          urlPattern: /^https:\/\/fonts\.googleapis\.com/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'google-fonts-stylesheets',
+          },
+        },
+        // Cache Google Fonts webfonts
+        {
+          urlPattern: /^https:\/\/fonts\.gstatic\.com/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'google-fonts-webfonts',
+            expiration: {
+              maxEntries: 30,
+              maxAgeSeconds: 60 * 60 * 24 * 365, // 1 tahun
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+        // Cache Unpkg CDN (Lucide icons, etc.)
+        {
+          urlPattern: /^https:\/\/unpkg\.com/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'unpkg-cdn-cache',
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+        // Cache HuggingFace model files (transformers.js) — CacheFirst
         {
           urlPattern: /^https:\/\/huggingface\.co\/.*/i,
           handler: 'CacheFirst',
@@ -54,14 +90,14 @@ module.exports = merge(common, {
             },
           },
         },
-        // Cache file WASM dan MJS lokal yang besar — CacheFirst karena hash-based
+        // Cache WASM, MJS, dan font files
         {
-          urlPattern: /\.(wasm|mjs)$/i,
+          urlPattern: /\.(wasm|mjs|woff|woff2|ttf|eot)$/i,
           handler: 'CacheFirst',
           options: {
-            cacheName: 'wasm-mjs-cache',
+            cacheName: 'wasm-fonts-cache',
             expiration: {
-              maxEntries: 10,
+              maxEntries: 20,
               maxAgeSeconds: 60 * 60 * 24 * 30,
             },
             cacheableResponse: {
@@ -93,21 +129,6 @@ module.exports = merge(common, {
             expiration: {
               maxEntries: 60,
               maxAgeSeconds: 60 * 60 * 24 * 7, // 7 hari
-            },
-            cacheableResponse: {
-              statuses: [0, 200],
-            },
-          },
-        },
-        // Cache API calls — NetworkFirst agar data terbaru diprioritaskan
-        {
-          urlPattern: /^https:\/\/api\./i,
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'api-cache',
-            expiration: {
-              maxEntries: 50,
-              maxAgeSeconds: 60 * 60 * 24,
             },
             cacheableResponse: {
               statuses: [0, 200],
