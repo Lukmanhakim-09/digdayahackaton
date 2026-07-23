@@ -24,7 +24,8 @@ module.exports = merge(common, {
       swDest: 'sw.js',
       clientsClaim: true,
       skipWaiting: true,
-      maximumFileSizeToCacheInBytes: 25 * 1024 * 1024,
+      navigateFallback: 'index.html',
+      maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
       runtimeCaching: [
         // Cache Google Fonts stylesheets
         {
