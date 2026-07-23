@@ -1,0 +1,4 @@
+dist
+node_modules
+src/scripts/pages/home/home-page.js
+src/scripts/services/rootfacts.service.js
